@@ -2,6 +2,8 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils.text import slugify
+import uuid
+import os
 
 
 # Validator to restrict file formats and size
@@ -164,6 +166,18 @@ class ExtraIncome(models.Model):
         return f"Extra Income {self.id} - {self.user_mobile.mobile} - {self.extra_amount}"
 
 
+def payment_screenshot_upload_path(instance, filename):
+    """Generates a safe, unique file path for payment_screenshot image upload."""
+    if not filename:
+        # Fallback if filename is empty
+        filename = f"payment_screenshot_{uuid.uuid4().hex}.jpg"
+    else:
+        # Clean filename and ensure it’s safe
+        ext = filename.split('.')[-1]
+        filename = f"payment_screenshot_{uuid.uuid4().hex}.{ext}"
+    return os.path.join("payment_screenshot", filename)
+
+
 class Payment(models.Model):
     STATUS_CHOICES = [
         ('0', 'Pending'),
@@ -173,6 +187,7 @@ class Payment(models.Model):
 
     user_mobile = models.ForeignKey(Users, on_delete=models.CASCADE, to_field='mobile', related_name='payments')
     amount = models.IntegerField()
+    payment_screenshot = models.ImageField(upload_to=payment_screenshot_upload_path, blank=True, null=True)
     transaction_code = models.BigIntegerField(
         default=0,
         validators=[MinValueValidator(0), MaxValueValidator(999999999999)]  # 12-digit limit
@@ -183,9 +198,6 @@ class Payment(models.Model):
     def __str__(self):
         return f"{self.user_mobile} - {self.amount}"
 
-
-import uuid
-import os
 
 def pan_card_upload_path(instance, filename):
     """Generates a safe, unique file path for PAN card image upload."""

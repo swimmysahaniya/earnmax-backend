@@ -38,7 +38,7 @@ class TaskAdmin(admin.ModelAdmin):
 
 @admin.register(Payment)
 class PaymentAdmin(admin.ModelAdmin):
-    list_display = ("user_mobile", "amount", 'transaction_code', "colored_status", "created_at")
+    list_display = ("user_mobile", "amount", 'transaction_code', "payment_screenshot_image_display", "colored_status", "created_at")
     list_filter = ("status", "created_at")
     search_fields = ('user_mobile__mobile', 'transaction_code')
 
@@ -53,6 +53,13 @@ class PaymentAdmin(admin.ModelAdmin):
 
     colored_status.admin_order_field = 'status'
     colored_status.short_description = 'Status'  # Display name in admin
+
+    def payment_screenshot_image_display(self, obj):
+        if obj.payment_screenshot:
+            return format_html('<img src="{}" width="100px" style="border-radius:5px;"/>', obj.payment_screenshot.url)
+        return "No Image"
+
+    payment_screenshot_image_display.short_description = "Screenshot Image"
 
 
 @admin.register(CompletedTask)
